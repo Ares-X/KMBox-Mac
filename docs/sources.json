@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "reviewed_at": "2026-09-13",
+  "scope": "Reference provenance, not a dependency lockfile or redistribution grant",
+  "primary_repositories": [
+    {
+      "repository": "DFRobot/uPyCraft_src",
+      "revision": "68dfc449ee1af7f4bdb0ba8a9a127ec890935d3b",
+      "source_url": "https://github.com/DFRobot/uPyCraft_src/tree/68dfc449ee1af7f4bdb0ba8a9a127ec890935d3b",
+      "license_observed": "No LICENSE/COPYING/COPYRIGHT file found in complete tree at pinned revision",
+      "use": "uPyCraft editing, serial REPL and board-file workflow reference",
+      "relationship": "reference-only; no upstream source files shipped"
+    },
+    {
+      "repository": "kvmaibox/kmboxnet",
+      "revision": "9b62283c6271e8e594f3b97986fed291deb4318f",
+      "source_url": "https://github.com/kvmaibox/kmboxnet/tree/9b62283c6271e8e594f3b97986fed291deb4318f",
+      "license_observed": "No LICENSE/COPYING/COPYRIGHT file found in complete tree at pinned revision",
+      "use": "Net command IDs, header/payload layouts, parameter byte order",
+      "relationship": "reference-only; no upstream source files shipped"
+    },
+    {
+      "repository": "micropython/micropython",
+      "revision": "v1.13",
+      "source_url": "https://github.com/micropython/micropython/blob/v1.13/tools/pyboard.py",
+      "license_url": "https://github.com/micropython/micropython/blob/v1.13/LICENSE",
+      "license_observed": "MIT",
+      "use": "raw REPL framing and behavior reference",
+      "relationship": "reference-only; no upstream source files shipped"
+    }
+  ],
+  "connector_references": [
+    {
+      "repository": "andyless/kmbox-universal",
+      "revision": "db120b549c0c6fe5eaf5b94403ee178f3f4d208f",
+      "source_url": "https://github.com/andyless/kmbox-universal/tree/db120b549c0c6fe5eaf5b94403ee178f3f4d208f",
+      "download_url": "https://codeload.github.com/andyless/kmbox-universal/zip/db120b549c0c6fe5eaf5b94403ee178f3f4d208f",
+      "download_sha256": "1c64f60920da6048e1e3f4873aff36fb8e9060bb59198e899c9d2c2ac396ba31",
+      "license_observed": "MIT",
+      "relationship": "reference-only; no upstream source files shipped",
+      "use": "自动/Bézier 报文及监控生命周期对照；未采用其配置字段和只停止本机接收的差异实现。"
+    },
+    {
+      "repository": "OceanTw/KMNet.java",
+      "revision": "095ec9ad057e952f28ab8f2be6e1c078dba79ac7",
+      "source_url": "https://github.com/OceanTw/KMNet.java/tree/095ec9ad057e952f28ab8f2be6e1c078dba79ac7",
+      "download_url": "https://codeload.github.com/OceanTw/KMNet.java/zip/095ec9ad057e952f28ab8f2be6e1c078dba79ac7",
+      "download_sha256": "724191f98f27b839a94c94ded7de66cad6db65f36376fd6b76e7b5cda1ee1d22",
+      "license_observed": "Not found at pinned revision",
+      "relationship": "reference-only; no upstream source files shipped",
+      "use": "键鼠事件组织方式参考；未直接纳入事件库。"
+    },
+    {
+      "repository": "uve192/KMBox.NET",
+      "revision": "5a5aea9b0d92839e28893acd59a6eaf68dcb25e8",
+      "source_url": "https://github.com/uve192/KMBox.NET/tree/5a5aea9b0d92839e28893acd59a6eaf68dcb25e8",
+      "download_url": "https://codeload.github.com/uve192/KMBox.NET/zip/5a5aea9b0d92839e28893acd59a6eaf68dcb25e8",
+      "download_sha256": "309123882a523d0de85211364a87fba1202e91d7bc980ab1065ecc7ba531df3e",
+      "license_observed": "MIT",
+      "relationship": "reference-only; no upstream source files shipped",
+      "use": "20 字节报告及控制点结构的交叉核对。"
+    },
+    {
+      "repository": "yuta6/kmbox-net-native-client",
+      "revision": "ea956862c64ef48eefb876953e09e6e75ea3feb4",
+      "source_url": "https://github.com/yuta6/kmbox-net-native-client/tree/ea956862c64ef48eefb876953e09e6e75ea3feb4",
+      "download_url": "https://codeload.github.com/yuta6/kmbox-net-native-client/zip/ea956862c64ef48eefb876953e09e6e75ea3feb4",
+      "download_sha256": "837a914c56f9f48bbdbc81a8e88668b9c6b44ec49414af335fba4524daad87e6",
+      "license_observed": "MIT",
+      "relationship": "reference-only; no upstream source files shipped",
+      "use": "跨平台 UDP 编码、监控时间戳和有界队列参考；不混入超时合成的零位移事件。"
+    },
+    {
+      "repository": "KuromeSama6/kmboxnet",
+      "revision": "088d66ff3fce9b5f4ce9ddcabd6b3002b2dbd338",
+      "source_url": "https://github.com/KuromeSama6/kmboxnet/tree/088d66ff3fce9b5f4ce9ddcabd6b3002b2dbd338",
+      "download_url": "https://codeload.github.com/KuromeSama6/kmboxnet/zip/088d66ff3fce9b5f4ce9ddcabd6b3002b2dbd338",
+      "download_sha256": "b1e9d5547e815f638399ede9bf9703738edf817e19a7aefad8ae812d20006687",
+      "license_observed": "MIT",
+      "relationship": "reference-only; no upstream source files shipped",
+      "use": "异步接口和公开命令范围对照。"
+    },
+    {
+      "repository": "chase-irql/CPP-KmBoxNet",
+      "revision": "150c49df9eead858ecc7e1277f2d6676e1d40da4",
+      "source_url": "https://github.com/chase-irql/CPP-KmBoxNet/tree/150c49df9eead858ecc7e1277f2d6676e1d40da4",
+      "download_url": "https://codeload.github.com/chase-irql/CPP-KmBoxNet/zip/150c49df9eead858ecc7e1277f2d6676e1d40da4",
+      "download_sha256": "a597c759b62f0d5febf443bd59aa6e2fd81d712b849741ce8ed50492ec760ff8",
+      "license_observed": "MIT",
+      "relationship": "reference-only; no upstream source files shipped",
+      "use": "API 状态和错误表达参考；不采用无确认发送。"
+    },
+    {
+      "repository": "shengdingbox/kvmNet_python",
+      "revision": "b7c3959d4b377dd17199b1bf562a1e69900c1c59",
+      "source_url": "https://github.com/shengdingbox/kvmNet_python/tree/b7c3959d4b377dd17199b1bf562a1e69900c1c59",
+      "download_url": "https://codeload.github.com/shengdingbox/kvmNet_python/zip/b7c3959d4b377dd17199b1bf562a1e69900c1c59",
+      "download_sha256": "297c05e09c113da06540221ce1e4fd3bef243d226b8b846434a6a9aae90e8969",
+      "license_observed": "Only bundled pybind11 license observed; repository-wide license unconfirmed",
+      "relationship": "reference-only; no upstream source files shipped",
+      "use": "平台兼容性核对；未使用其中 Windows PYD/构建产物。"
+    },
+    {
+      "repository": "ShirokoLEET/simple-kmbox-connect",
+      "revision": "a371cb589aee96fd8f059bc23a1d2f949504321b",
+      "source_url": "https://github.com/ShirokoLEET/simple-kmbox-connect/tree/a371cb589aee96fd8f059bc23a1d2f949504321b",
+      "download_url": "https://codeload.github.com/ShirokoLEET/simple-kmbox-connect/zip/a371cb589aee96fd8f059bc23a1d2f949504321b",
+      "download_sha256": "b840c237b91c3eb7e19725a24a1cbd6d5d4306f7e577fe35a4b4b847dd2d16df",
+      "license_observed": "Not found at pinned revision",
+      "relationship": "reference-only; no upstream source files shipped",
+      "use": "最小 Net 握手/控制流程对照。"
+    },
+    {
+      "repository": "TKazer/KmBoxNetManager",
+      "revision": "51edccd40fd4cf5cd13cf1166023258f3fca83b3",
+      "source_url": "https://github.com/TKazer/KmBoxNetManager/tree/51edccd40fd4cf5cd13cf1166023258f3fca83b3",
+      "download_url": "https://codeload.github.com/TKazer/KmBoxNetManager/zip/51edccd40fd4cf5cd13cf1166023258f3fca83b3",
+      "download_sha256": "724de0e159df197b27e0e5cafce4e575b7b653c4cc5afaaf42e09564922b32c8",
+      "license_observed": "Not found at pinned revision",
+      "relationship": "reference-only; no upstream source files shipped",
+      "use": "旧 Windows 客户端接口范围对照。"
+    },
+    {
+      "repository": "Linorman/kmboxNet-linux",
+      "revision": "f12199d7a22be56fd69cfddaf8ba50ba3ea0e4cb",
+      "source_url": "https://github.com/Linorman/kmboxNet-linux/tree/f12199d7a22be56fd69cfddaf8ba50ba3ea0e4cb",
+      "download_url": "https://codeload.github.com/Linorman/kmboxNet-linux/zip/f12199d7a22be56fd69cfddaf8ba50ba3ea0e4cb",
+      "download_sha256": "bb34001904047d9d2510d0b0ae5a414158413c337918d96a70de5b1503a71cf0",
+      "license_observed": "Not found at pinned revision",
+      "relationship": "reference-only; no upstream source files shipped",
+      "use": "POSIX 实现及原 Net 四项曲线参数的交叉核对。"
+    },
+    {
+      "repository": "Oein/node-kmbox",
+      "revision": "49b6049b4db35121933eeef5d396bfcf99a190be",
+      "source_url": "https://github.com/Oein/node-kmbox/tree/49b6049b4db35121933eeef5d396bfcf99a190be",
+      "download_url": "https://codeload.github.com/Oein/node-kmbox/zip/49b6049b4db35121933eeef5d396bfcf99a190be",
+      "download_sha256": "9a8f4078cf6315c3c513d8c34853894d86eeffcfde6ee7c4a34a533450afda19",
+      "license_observed": "Not found at pinned revision",
+      "relationship": "reference-only; no upstream source files shipped",
+      "use": "B Pro 串口辅助函数流程对照；未使用上传辅助库实现。"
+    },
+    {
+      "repository": "Krzanowski-Ambroise/kmbox-net-tester",
+      "revision": "50e43cb8513776f965665368747594e249cdd1e1",
+      "source_url": "https://github.com/Krzanowski-Ambroise/kmbox-net-tester/tree/50e43cb8513776f965665368747594e249cdd1e1",
+      "download_url": "https://codeload.github.com/Krzanowski-Ambroise/kmbox-net-tester/zip/50e43cb8513776f965665368747594e249cdd1e1",
+      "download_sha256": "b5c22621009e91d007b0f5c0a4e70fe0bb32d96510b4452c0c2e29a9062b166e",
+      "license_observed": "Not found at pinned revision",
+      "relationship": "reference-only; no upstream source files shipped",
+      "use": "诊断统计呈现参考；本项目统计匹配事务，不用重复握手或任意 UDP 包作为延迟测量。"
+    }
+  ],
+  "vendor_download_references": [
+    {
+      "name": "Net host tool 20260904",
+      "url": "https://www.kmbox.top/tools/NetRelease.zip",
+      "archive_sha256": "1b6d2a1c8a8e3f2a7a9dccc93f31173229726e0f707f98b953eaf640e0c09273",
+      "executable_sha256": "3cc488f67c63909164319fa70133f80a06fac0339f1161c34208f8a9a2ef1a69",
+      "relationship": "static behavior reference; not executed or distributed"
+    },
+    {
+      "name": "Net host tool 20251106 reference",
+      "url": "https://www.kmbox.top/wiki_doc/kmboxNet/site/tools/NetRelease.zip",
+      "archive_sha256": "f164e71c80cffade314d976f320e0e25465ada6954da4fe53f9f1f47846f1ecc",
+      "relationship": "static behavior reference; not executed or distributed"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+# Swift and Xcode build state
+.build/
+.swiftpm/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+
+# Local builds, device captures, downloaded vendor research and historical notes
+/dist/
+/artifacts/
+/research/
+
+# macOS / Python / local environment
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.env.*

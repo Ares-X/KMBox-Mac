@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>CFBundleName</key><string>KMBox Mac</string>
+  <key>CFBundleDisplayName</key><string>KMBox Mac</string>
+  <key>CFBundleExecutable</key><string>KMBoxMac</string>
+  <key>CFBundleIdentifier</key><string>local.kmbox.mac</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleShortVersionString</key><string>1.3.0</string>
+  <key>CFBundleVersion</key><string>5</string>
+  <key>CFBundleIconFile</key><string>KMBox.icns</string>
+  <key>LSMinimumSystemVersion</key><string>13.0</string>
+  <key>NSHighResolutionCapable</key><true/>
+  <key>NSCameraUsageDescription</key><string>按您的选择预览接入 Mac 的采集卡或摄像头，并将截图保存到指定目录。</string>
+  <key>NSLocalNetworkUsageDescription</key><string>通过本地网络控制您指定的 KMBox，并按需向 NB 提供固件下载。</string>
+  <key>NSHumanReadableCopyright</key><string>KMBox Mac — Independent macOS implementation.</string>
+  <key>CFBundleDocumentTypes</key><array><dict>
+    <key>CFBundleTypeName</key><string>Python source</string>
+    <key>CFBundleTypeRole</key><string>Editor</string>
+    <key>LSHandlerRank</key><string>Alternate</string>
+    <key>CFBundleTypeExtensions</key><array><string>py</string></array>
+  </dict></array>
+</dict></plist>

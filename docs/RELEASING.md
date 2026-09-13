@@ -16,18 +16,20 @@ git diff --check
 
 来源变更更新 `SOURCES.md` 与 `docs/sources.json`；版本变更更新 `Resources/Info.plist`、README 和 CHANGELOG。许可证只覆盖本项目有权授权的材料，不将厂商资料重新授权。
 
-## 第一次发布到 GitHub
+## GitHub 仓库
 
-先在自己的 GitHub 账户创建一个**空仓库**，不额外生成 README/许可证；将真实仓库 URL 填入下面的占位值。不要在已有 origin 上盲目执行。
+公开源码位于 [Ares-X/KMBox-Mac](https://github.com/Ares-X/KMBox-Mac)，二进制位于 [Releases](https://github.com/Ares-X/KMBox-Mac/releases)。本项目为**非官方版本**；README、应用“关于”与 Release 标题均应保留此标识。
+
+首次克隆：
 
 ```bash
-git remote add origin GITHUB_REPOSITORY_URL
+git clone git@github.com:Ares-X/KMBox-Mac.git
+cd KMBox-Mac
 git remote -v
 git log -1 --oneline
-git push -u origin HEAD
 ```
 
-本地准备分支可以直接成为初始分支；是否采用 `main` 由仓库维护者决定。创建仓库和推送是独立的公开发布动作，本地初始化/提交不代表已经发布。本项目文档不预设一个尚不存在的 GitHub 仓库或 Release 下载地址。
+初始默认分支为 `codex/open-source`。后续发布前确认远端默认分支、分支保护规则、工作区状态与已有标签；不要覆盖已有标签或强制推送。Release 标签应指向生成附件所用的干净源码提交。
 
 ## 验证与二进制
 
@@ -42,14 +44,14 @@ codesign --verify --deep --strict "dist/KMBox Mac.app"
 
 二进制、固件和研究下载不要加入源码提交。制作 Release 时使用本次干净源码的新构建，不要复用开源整理前的旧 ZIP：旧包可能携带旧版开发记录。
 
-例如为一个已提交版本生成带提交号的应用 ZIP：
+例如为一个已提交版本生成应用 ZIP 与校验文件（版本号应与 `Resources/Info.plist` 一致）：
 
 ```bash
-revision="$(git rev-parse --short HEAD)"
-ditto -c -k --sequesterRsrc --keepParent "dist/KMBox Mac.app" "dist/KMBox-Mac-${revision}.zip"
-shasum -a 256 "dist/KMBox-Mac-${revision}.zip"
+version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' Resources/Info.plist)"
+ditto -c -k --sequesterRsrc --keepParent "dist/KMBox Mac.app" "dist/KMBox-Mac-${version}-universal.zip"
+(cd dist && shasum -a 256 "KMBox-Mac-${version}-universal.zip" kmctl > SHA256SUMS.txt)
 ```
 
-CLI 可单独附上 `dist/kmctl` 和相应 SHA-256。检查 ZIP CRC、实际文件及随包许可；Release 说明列出系统要求、签名状态、已测试设备和未验证功能。这里的 ZIP 只有 App；不要暗示其中同时包含单独 CLI。
+Release 附件包含应用 ZIP、单独的 `kmctl` 与 `SHA256SUMS.txt`。检查 ZIP CRC、实际文件及随包许可；说明列出源码提交、系统要求、签名状态、已测试设备和未验证功能。这里的 ZIP 只有 App；不要暗示其中同时包含单独 CLI。直接下载 CLI 后，在终端执行 `chmod +x kmctl` 再使用。
 
 当前构建为 ad-hoc 签名，没有 Developer ID 或公证。若将来增加正式签名，应通过维护者自己的证书和发布流程处理，不把证书、私钥或 Apple 凭据写入仓库。

@@ -1,5 +1,7 @@
 # KMBox Mac
 
+> **Unofficial release**: independently developed by the community, with no affiliation with or endorsement from KMBox, DFRobot, or MicroPython.
+
 A native macOS workbench for KMBox network input control, device diagnostics, and MicroPython development. Includes a SwiftUI/AppKit app, the `kmctl` CLI, and a reusable `KMBoxCore` library.
 
 [中文](README.md) · [Usage](docs/USAGE.md) · [Compatibility](docs/COMPATIBILITY.md) · [Protocol](docs/PROTOCOL.md) · [Sources](SOURCES.md)
@@ -15,6 +17,12 @@ Version **1.3.1**. The UI and detailed guides are currently in Chinese. This is 
 - AVFoundation video preview and screenshots; NB firmware validation and HTTP hosting for device-initiated updates.
 
 **A USB network interface is not a Python REPL.** Network input control uses Net UDP. Board scripting and file management use the B serial interface with compatible firmware. The two connections are separate and can coexist.
+
+## Download
+
+Download `KMBox-Mac-VERSION-universal.zip` from [GitHub Releases](https://github.com/Ares-X/KMBox-Mac/releases/latest), extract it, and move `KMBox Mac.app` to Applications. The `kmctl` CLI is a separate attachment. Verify downloads against the accompanying `SHA256SUMS.txt`.
+
+Requires macOS 13+. Both binaries support Apple Silicon and Intel. The app is ad-hoc signed, **not Developer ID signed or notarized**; macOS may block the first launch. Building from source is also supported.
 
 ## Build
 

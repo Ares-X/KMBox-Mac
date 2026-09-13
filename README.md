@@ -1,5 +1,7 @@
 # KMBox Mac
 
+> **非官方版本（Unofficial）**：社区独立开发，与 KMBox、DFRobot 或 MicroPython 官方没有隶属或背书关系。
+
 **原生 macOS KMBox 工作台：网络键鼠控制、设备配置与监控、MicroPython 脚本开发。**
 
 [English](README.en.md) · [使用指南](docs/USAGE.md) · [兼容性](docs/COMPATIBILITY.md) · [协议](docs/PROTOCOL.md) · [来源与致谢](SOURCES.md)
@@ -33,6 +35,12 @@
 
 Net 命令的输入输出指向盒子 **OTG 口所接电脑**。应用允许选择本机 IPv4 接口，但不会配置 Mac 网卡地址或更改路由。
 
+## 下载应用
+
+从 [GitHub Releases](https://github.com/Ares-X/KMBox-Mac/releases/latest) 下载 `KMBox-Mac-版本号-universal.zip`，解压后将 `KMBox Mac.app` 拖入“应用程序”。`kmctl` 命令行作为单独附件提供，校验值见同一 Release 的 `SHA256SUMS.txt`。
+
+需要 macOS 13 或更新版本，应用和 CLI 均包含 Apple Silicon / Intel 架构。当前应用使用本地 ad-hoc 签名，**没有 Developer ID 签名或 Apple 公证**；macOS 可能拦截首次打开。也可按下方步骤从源码构建。
+
 ## 从源码构建
 
 需要 macOS 13 或更新版本及支持 Swift 5.9+ 的 Xcode 工具链。测试工具还需要 Python 3 标准库；无需 `pip install`。已验证的开发环境为 Apple Silicon、macOS 26.6.2、Swift 6.3.3；最低系统版本和 Intel 物理机尚未单独验收。
@@ -47,7 +55,7 @@ open "dist/KMBox Mac.app"
 ./dist/kmctl --help
 ```
 
-构建脚本生成 `dist/KMBox Mac.app` 和 `dist/kmctl`，二者均包含 arm64 / x86_64。应用带本地 ad-hoc 签名，未做 Developer ID 签名或 Apple 公证。`dist/` 不纳入源码 Git，克隆后需自行构建；公开二进制应另行作为 GitHub Release 附件发布。
+构建脚本生成 `dist/KMBox Mac.app` 和 `dist/kmctl`，二者均包含 arm64 / x86_64。`dist/` 不纳入源码 Git；预编译应用通过 GitHub Release 附件发布。
 
 默认启动不会自动连接设备、运行脚本或触发刷写。完整操作步骤和文件恢复方式见 [使用指南](docs/USAGE.md)。
 
@@ -99,6 +107,6 @@ docs/                  使用、协议、兼容性和验证文档
 
 ## 参与和许可
 
-提交问题或改动前请阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。版本变化见 [CHANGELOG.md](CHANGELOG.md)，维护和首次发布步骤见 [发布指南](docs/RELEASING.md)。
+提交问题或改动前请阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。版本变化见 [CHANGELOG.md](CHANGELOG.md)，维护和发布步骤见 [发布指南](docs/RELEASING.md)。
 
 本项目自有代码与文档使用 [MIT License](LICENSE)。参考项目和厂商资料仍遵循其各自许可，来源引用不代表它们被重新授权为 MIT。

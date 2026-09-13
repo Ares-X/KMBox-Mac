@@ -102,7 +102,7 @@ struct KMBoxMacApp: App {
                     Text("NB 默认使用 115200。更改需与盒子设置一致。").font(.caption).foregroundStyle(.secondary)
                 }
                 Section("关于") {
-                    Text("KMBox Mac 1.2.0 · 原生 macOS 开发工作台")
+                    Text("KMBox Mac \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "开发版") · 原生 macOS 开发工作台")
                     Text("网络控制使用 Net 协议；板载脚本使用 B 串口。应用不会自动刷写固件。").font(.caption).foregroundStyle(.secondary)
                     Button("初始化应用配置…") { model.resetPreferences() }
                         .disabled(model.netConnected || model.boardConnected || model.netBusy || model.boardBusy || model.firmwareActive)

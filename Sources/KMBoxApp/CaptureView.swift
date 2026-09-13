@@ -2,8 +2,8 @@ import SwiftUI
 import AVFoundation
 
 struct CaptureView: View {
+    @EnvironmentObject var model: AppModel
     @ObservedObject var capture: CaptureModel
-    let monitorListening: Bool
     var body: some View {
         ScrollView {
             VStack(spacing: 18) {
@@ -48,14 +48,14 @@ struct CaptureView: View {
                         Text(capture.folder?.path ?? "尚未选择").font(.caption).textSelection(.enabled).lineLimit(2)
                     }
                     Toggle("收到设备上报的左键按下时截图", isOn: $capture.automatic)
-                        .disabled(!monitorListening || !capture.running || capture.folder == nil)
+                        .disabled(!model.monitorListening || !capture.running || capture.folder == nil)
                     Text("先在“配置与监控”启动上报。每次松开后重新按下左键保存一张；持续按住不会重复保存，最初收到的已按下状态不触发。停止监控或预览会关闭自动截图。")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 MessageBanner(text: capture.message)
                 if !capture.error.isEmpty { MessageBanner(text: capture.error, error: true) }
             }.padding(24)
-        }.task { capture.refresh() }
+        }.task { capture.refreshIfNeeded() }
     }
 }
 

@@ -18,7 +18,7 @@ struct NetDiagnosticsView: View {
     private var canConfigure: Bool { model.netConnected && !model.netBusy }
     var body: some View {
         ScrollView {
-            VStack(spacing: 18) {
+            LazyVStack(spacing: 18) {
                 NetConnectionView()
                 if !model.netError.isEmpty { MessageBanner(text: model.netError, error: true) }
                 MessageBanner(text: model.diagnosticsMessage)

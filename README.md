@@ -4,7 +4,7 @@
 
 [English](README.en.md) · [使用指南](docs/USAGE.md) · [兼容性](docs/COMPATIBILITY.md) · [协议](docs/PROTOCOL.md) · [来源与致谢](SOURCES.md)
 
-使用 SwiftUI / AppKit 和 macOS 系统接口实现，包含桌面应用、`kmctl` 命令行及可复用的 `KMBoxCore`。没有第三方 Swift 包、Windows DLL、Qt 或 Python GUI 依赖。当前版本 **1.3.0**，界面以中文为主。
+使用 SwiftUI / AppKit 和 macOS 系统接口实现，包含桌面应用、`kmctl` 命令行及可复用的 `KMBoxCore`。没有第三方 Swift 包、Windows DLL、Qt 或 Python GUI 依赖。当前版本 **1.3.1**，界面以中文为主。
 
 本项目为独立实现，与 KMBox、DFRobot 或 MicroPython 官方没有隶属或背书关系。uPyCraft 提供了脚本工作流参考；本项目不是把 Windows uPyCraft 可执行文件重新打包为 Mac 应用。
 

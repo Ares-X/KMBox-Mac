@@ -32,14 +32,8 @@ struct ContentView: View {
                     } else { Button("导出记录…") { model.exportLogs() } }
                 }.padding(.horizontal, 25).padding(.vertical, 21)
                 Divider()
-                switch model.page {
-                case .control: ControlsView()
-                case .diagnostics: NetDiagnosticsView()
-                case .capture: CaptureView(capture: model.capture, monitorListening: model.monitorListening)
-                case .editor: EditorView()
-                case .activity: ActivityView()
-                case .firmware: FirmwareView()
-                }
+                PageHost(page: model.page, model: model)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }.frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .background(Color(nsColor: .windowBackgroundColor))
@@ -89,6 +83,7 @@ struct ContentView: View {
                         }.padding(.horizontal, 12).padding(.vertical, 11)
                             .foregroundStyle(model.page == page ? accent : .primary)
                             .background(model.page == page ? accent.opacity(0.10) : Color.clear, in: RoundedRectangle(cornerRadius: 9))
+                            .contentShape(Rectangle())
                     }.buttonStyle(.plain)
                 }
             }
@@ -165,10 +160,14 @@ struct ControlsView: View {
     @State private var command = false
     var body: some View {
         ScrollView {
-            VStack(spacing: 18) {
+            LazyVStack(spacing: 18) {
                 NetConnectionView()
                 if !model.netError.isEmpty { MessageBanner(text: model.netError, error: true) }
-                HStack(alignment: .top, spacing: 18) { mousePanel; keyboardPanel }
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 18, alignment: .top),
+                                    GridItem(.flexible(), alignment: .top)], spacing: 18) {
+                    mousePanel
+                    keyboardPanel
+                }
                 HStack {
                     Circle().fill(model.netConnected ? accent : .secondary.opacity(0.4)).frame(width: 5, height: 5)
                     Text(model.netMessage).font(.caption).foregroundStyle(.secondary)

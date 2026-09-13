@@ -4,7 +4,7 @@ A native macOS workbench for KMBox network input control, device diagnostics, an
 
 [中文](README.md) · [Usage](docs/USAGE.md) · [Compatibility](docs/COMPATIBILITY.md) · [Protocol](docs/PROTOCOL.md) · [Sources](SOURCES.md)
 
-Version **1.3.0**. The UI and detailed guides are currently in Chinese. This is an independent project, not an official KMBox, DFRobot, or MicroPython product. uPyCraft was a workflow reference; its Windows executable is not bundled.
+Version **1.3.1**. The UI and detailed guides are currently in Chinese. This is an independent project, not an official KMBox, DFRobot, or MicroPython product. uPyCraft was a workflow reference; its Windows executable is not bundled.
 
 ## Features
 

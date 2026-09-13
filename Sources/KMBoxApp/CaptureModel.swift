@@ -5,12 +5,13 @@ import ImageIO
 import UniformTypeIdentifiers
 import KMBoxCore
 
-struct VideoSource: Identifiable, Equatable {
+struct VideoSource: Identifiable, Equatable, Sendable {
     let id: String
     let name: String
+    let formats: [VideoFormat]
 }
 
-struct VideoFormat: Identifiable, Equatable {
+struct VideoFormat: Identifiable, Equatable, Sendable {
     let id: Int
     let width: Int32
     let height: Int32
@@ -64,14 +65,19 @@ final class CaptureModel: ObservableObject {
     @Published private(set) var skipped = 0
     @Published private(set) var saving = false
     private var edge = MousePressEdge()
-    private let worker = CaptureWorker()
+    private let worker: CaptureWorker
+    private let discoverSources: @Sendable () async -> [VideoSource]
+    private var hasDiscovered = false
     private var operation: Task<Void, Never>?
     private var snapshotTask: Task<Void, Never>?
     private var generation = UUID()
     var session: AVCaptureSession { worker.session }
     var selectedFormat: VideoFormat? { formats.first { $0.id == formatID } }
 
-    init() {
+    init(discoverSources: (@Sendable () async -> [VideoSource])? = nil) {
+        let worker = CaptureWorker()
+        self.worker = worker
+        self.discoverSources = discoverSources ?? { await worker.discover() }
         worker.setUpdate { [weak self] rate, available, failure in
             Task { @MainActor [weak self] in
                 guard let self, self.running else { return }
@@ -81,27 +87,36 @@ final class CaptureModel: ObservableObject {
         }
     }
 
-    func refresh() {
-        guard !busy, !running else { return }
-        sources = videoDevices().map { VideoSource(id: $0.uniqueID, name: $0.localizedName) }
-        if !sources.contains(where: { $0.id == sourceID }) { sourceID = sources.first?.id ?? "" }
-        selectSource()
-        if sources.isEmpty { message = "未找到 Mac 可用的视频采集设备。请连接采集卡后刷新。" }
+    func refreshIfNeeded() {
+        if !hasDiscovered { refresh() }
     }
 
-    func selectSource() {
+    func refresh() {
         guard !busy, !running else { return }
-        guard let device = videoDevices().first(where: { $0.uniqueID == sourceID }) else {
+        busy = true
+        let token = generation
+        operation = Task {
+            let discovered = await discoverSources()
+            guard !Task.isCancelled, token == generation else { return }
+            let previousSource = sourceID
+            sources = discovered
+            if !sources.contains(where: { $0.id == sourceID }) { sourceID = sources.first?.id ?? "" }
+            busy = false; hasDiscovered = true
+            selectSource(preserveSelection: previousSource == sourceID)
+            message = sources.isEmpty ? "未找到 Mac 可用的视频采集设备。请连接采集卡后刷新。" : "选择接到 Mac 的采集卡或摄像头，点击开始预览。"
+        }
+    }
+
+    func selectSource(preserveSelection: Bool = false) {
+        guard !busy, !running else { return }
+        guard let source = sources.first(where: { $0.id == sourceID }) else {
             formats = []; formatID = -1; return
         }
-        formats = device.formats.enumerated().map { index, format in
-            let dimensions = CMVideoFormatDescriptionGetDimensions(format.formatDescription)
-            let code = CMFormatDescriptionGetMediaSubType(format.formatDescription)
-            let codec = String(bytes: (0..<4).reversed().map { UInt8(truncatingIfNeeded: code >> ($0 * 8)) }, encoding: .ascii) ?? String(code)
-            let ranges = format.videoSupportedFrameRateRanges
-            let candidates: [Double] = [15, 24, 25, 29.97, 30, 50, 59.94, 60, 120] + ranges.flatMap { [$0.minFrameRate, $0.maxFrameRate] }
-            let rates = Array(Set(candidates.filter { value in ranges.contains { value >= $0.minFrameRate && value <= $0.maxFrameRate } })).sorted()
-            return VideoFormat(id: index, width: dimensions.width, height: dimensions.height, codec: codec, rates: rates)
+        let previousFormat = selectedFormat
+        formats = source.formats
+        if preserveSelection, let previousFormat, formats.contains(previousFormat) {
+            if !previousFormat.rates.contains(rate) { selectFormat() }
+            return
         }
         formatID = formats.first(where: { $0.width == 1920 && $0.height == 1080 })?.id ?? formats.first?.id ?? -1
         selectFormat()
@@ -217,6 +232,24 @@ private final class CaptureWorker: NSObject, AVCaptureVideoDataOutputSampleBuffe
         if let disconnectedObserver { NotificationCenter.default.removeObserver(disconnectedObserver) }
     }
     func setUpdate(_ handler: @escaping @Sendable (Double, Bool, String?) -> Void) { queue.async { self.update = handler } }
+
+    func discover() async -> [VideoSource] {
+        await withCheckedContinuation { continuation in queue.async {
+            let sources = videoDevices().map { device in
+                let formats = device.formats.enumerated().map { index, format in
+                    let dimensions = CMVideoFormatDescriptionGetDimensions(format.formatDescription)
+                    let code = CMFormatDescriptionGetMediaSubType(format.formatDescription)
+                    let codec = String(bytes: (0..<4).reversed().map { UInt8(truncatingIfNeeded: code >> ($0 * 8)) }, encoding: .ascii) ?? String(code)
+                    let ranges = format.videoSupportedFrameRateRanges
+                    let candidates: [Double] = [15, 24, 25, 29.97, 30, 50, 59.94, 60, 120] + ranges.flatMap { [$0.minFrameRate, $0.maxFrameRate] }
+                    let rates = Array(Set(candidates.filter { value in ranges.contains { value >= $0.minFrameRate && value <= $0.maxFrameRate } })).sorted()
+                    return VideoFormat(id: index, width: dimensions.width, height: dimensions.height, codec: codec, rates: rates)
+                }
+                return VideoSource(id: device.uniqueID, name: device.localizedName, formats: formats)
+            }
+            continuation.resume(returning: sources)
+        } }
+    }
 
     func start(source: String, formatIndex: Int, fps: Double) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in

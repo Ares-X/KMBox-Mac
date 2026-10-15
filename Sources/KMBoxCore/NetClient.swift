@@ -17,6 +17,7 @@ public struct NetStatus: Sendable {
     public let mouse: MouseState
     public let keyboard: KeyboardState
     public let monitorPort: UInt16?
+    public let monitorLocalAddress: String?
     public let monitorNeedsStop: Bool
 }
 
@@ -41,7 +42,7 @@ public actor NetClient {
 
     public func status() -> NetStatus {
         NetStatus(connected: descriptor >= 0 && configuration != nil, uncertain: uncertain, mouse: mouse, keyboard: keyboard,
-                  monitorPort: monitor?.port, monitorNeedsStop: monitorNeedsStop)
+                  monitorPort: monitor?.port, monitorLocalAddress: monitor?.localAddress, monitorNeedsStop: monitorNeedsStop)
     }
 
     public func connect(_ config: NetConfiguration) throws -> NetReceipt {
@@ -51,6 +52,12 @@ public actor NetClient {
         guard fd >= 0 else { throw socketError("创建 UDP 套接字") }
         descriptor = fd
         do {
+            // Darwin can raise SIGPIPE even for connected UDP sockets that become
+            // unusable. Keep EPIPE on the normal send-error path instead of exiting.
+            var noSignal: Int32 = 1
+            guard setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, &noSignal, socklen_t(MemoryLayout<Int32>.size)) == 0 else {
+                throw socketError("设置 UDP 发送错误处理")
+            }
             if let local = config.localAddress {
                 var address = try socketAddress(local, port: 0)
                 let result = withUnsafePointer(to: &address) {

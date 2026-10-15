@@ -274,6 +274,9 @@ struct KMControl {
                     }
                     _ = try await client.stopMonitor()
                     try printJSON(MonitorSummary(accepted: batch.accepted, rejected: batch.rejected,
+                                                 received: batch.received, undecodable: batch.undecodable,
+                                                 foreignSource: batch.foreignSource, extended: batch.extended,
+                                                 lastReceivedLength: batch.lastReceivedLength,
                                                  lastRejectedLength: batch.lastRejectedLength, latest: latest))
                 }
             case "scroll":
@@ -378,6 +381,11 @@ private final class InterruptFlag: @unchecked Sendable {
 private struct MonitorSummary: Encodable {
     let accepted: UInt64
     let rejected: UInt64
+    let received: UInt64
+    let undecodable: UInt64
+    let foreignSource: UInt64
+    let extended: UInt64
+    let lastReceivedLength: Int?
     let lastRejectedLength: Int?
     let latest: NetMonitorFrame?
 }

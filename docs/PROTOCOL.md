@@ -70,7 +70,9 @@ NB 的官方通用 Web 更新由设备下载 Mac HTTP 服务器的 `/kmboxNB.cpi
 
 外设返回前 8 字节为四项小端 UInt16：VID、PID、HID、Device ID；最后两字节为鼠标与键盘解析模式。读取要求至少 26 字节完整应答。写解析前读取当前标识，仅替换末两字节；写应答后再次读取，核对标识及模式。全零返回无法识别外设，不能据此推断 NB 固件完整支持该命令。
 
-监控标准报文为 20 字节：鼠标 reportID/buttons/Int16LE x/y/wheel 共 8 字节，键盘 reportID/modifiers/10 个 HID 键码共 12 字节。来源 IPv4 必须为所连接的盒子，来源端口不作假设；其他长度计入未解析数、保留原始数据；错误来源仅计数，不保留其内容。每次最多读取 512 个报文，GUI 每约 33ms 拉取；1.3 支持原始监控 JSONL 导出。轨迹为报告的相对位移累计，不能证明包括其他程序全部移动。
+监控已知布局占前 20 字节：鼠标 reportID/buttons/Int16LE x/y/wheel 共 8 字节，键盘 reportID/modifiers/10 个 HID 键码共 12 字节。1.3.2 与上游取前缀的方式对齐：至少 20 字节才解码，额外字节完整保留但不解释，不足 20 字节计入未解析数。reportID 保留原值，不假定固定编号。来源 IPv4 必须为所连接的盒子，来源端口不作假设；错误来源仅计数，不保留其内容。每次最多读取 512 个报文，GUI 每约 33ms 拉取，并按批次更新轨迹。
+
+轨迹按每条报告的相对位移累计。[官方 Net 手册](https://www.kmbox.top/wiki_doc/kmboxNet/site/)描述其可显示包含第三方软件输入的最终运动；上游主机实现为单路累计 XY。报文本身没有人工／程序／修正来源标签，也没有采样位置元数据，不能仅凭该布局确认每个 NB 固件的修正后输出或分离三路。NB 此次实测收到 20 字节鼠标位移报告，未测试第三方输入或阈值触发修正。
 
 Net 配置 setter 的 ACK 语义有限，不宣称回读、持久化或实际应用已验证。`setParsing` 单独报告写入已应答但回读失败。监控开启 ACK 丢失仍记录待停止；停止关闭本地端口，即使停止 ACK 丢失，远端不确定状态仍允许在同一连接重试停止。断开失败保留错误，不报告远端已关闭。查询不会触发键鼠释放。
 
@@ -86,4 +88,6 @@ Net 配置 setter 的 ACK 语义有限，不宣称回读、持久化或实际应
 
 `NetClient` 独占事务统计：send 成功才增加 sent/bytesSent；收到匹配且足够长的应答才增加 acknowledged 和 RTT；超时与其他接收错误分别计数。无效本地输入、发送前失败及不确定状态下被阻止的命令不算已发送。RTT 方差使用全部成功样本的总体方差在线计算，内存 O(1)；新连接重置，断开后保留统计，清空不发报文。统计混合握手、查询、配置与输入，包含设备处理时间；不是单向延迟或真实网络丢包测量。
 
-JSONL 第一行 `kind=capture`、`schemaVersion=1`；GUI `mode=retained-snapshot` 带 retainedRecords/discardedRecords，CLI 为 live-stream。后续 `kind=datagram` 带 sessionID、Mac 赋予的接收 sequence、receivedAtUnixSeconds（秒）、monotonicNanoseconds（开机单调时钟纳秒）、sourceIPv4/sourcePort/listenPort、rawHex、可选 frame/decodeError。序号不是固件包序号；时间戳在 recvfrom 返回后取得，不是设备或内核时间。未知长度不虚构来源类别或曲线数据，空闲不合成零值。CLI SIGINT/SIGTERM 后保留部分日志并停止监控；UDP 或系统缓冲区丢包无法由接收序号推算。
+JSONL 第一行 `kind=capture`、`schemaVersion=1`；GUI `mode=retained-snapshot` 带 retainedRecords/discardedRecords，CLI 为 live-stream。后续 `kind=datagram` 带 sessionID、Mac 赋予的接收 sequence、receivedAtUnixSeconds（秒）、monotonicNanoseconds（开机单调时钟纳秒）、sourceIPv4/sourcePort/listenPort、rawLength（1.3.2 新增）、rawHex、可选 frame/decodeError。序号不是固件包序号；时间戳在 recvfrom 返回后取得，不是设备或内核时间。未解析数据和附加字节不虚构来源类别或曲线数据，空闲不合成零值。CLI SIGINT/SIGTERM 后保留部分日志并停止监控；UDP 或系统缓冲区丢包无法由接收序号推算。
+
+1.3.2 的监控汇总新增 `received`（目标设备报文）、`undecodable`（不足 20 字节）、`foreignSource`（非目标来源）、`extended`（已解析但多于 20 字节）及 `lastReceivedLength`。保留原 `accepted` / `rejected` 字段；`received = accepted + undecodable`，`rejected = undecodable + foreignSource`。空闲不更新计数或最近收包时间。

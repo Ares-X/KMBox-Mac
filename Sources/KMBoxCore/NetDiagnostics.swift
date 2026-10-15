@@ -72,6 +72,8 @@ public struct NetPeripheralInfo: Sendable, Equatable, Codable {
     func payload(with modes: NetParsingModes) -> Data { raw.prefix(8) + Data([modes.mouse, modes.keyboard]) }
 }
 
+/// Decodes the 20-byte mouse/keyboard prefix consumed by the Net host.
+/// Additional bytes are not interpreted; NetMonitorRecord retains the full datagram.
 public struct NetMonitorFrame: Sendable, Equatable, Codable {
     public let mouseReportID: UInt8
     public let buttons: UInt8
@@ -82,8 +84,8 @@ public struct NetMonitorFrame: Sendable, Equatable, Codable {
     public let modifiers: UInt8
     public let keys: [UInt8]
     public init(data: Data) throws {
-        guard data.count == 20 else { throw KMError.device("未知监控报文长度：\(data.count)，需要 20 字节。") }
-        let b = Array(data)
+        guard data.count >= 20 else { throw KMError.device("监控报文不足 20 字节：\(data.count)。") }
+        let b = Array(data.prefix(20))
         func signed(_ i: Int) -> Int16 { Int16(bitPattern: UInt16(b[i]) | UInt16(b[i + 1]) << 8) }
         mouseReportID = b[0]; buttons = b[1]; x = signed(2); y = signed(4); wheel = signed(6)
         keyboardReportID = b[8]; modifiers = b[9]; keys = b[10..<20].filter { $0 != 0 }
@@ -93,9 +95,22 @@ public struct NetMonitorFrame: Sendable, Equatable, Codable {
 public struct NetMonitorBatch: Sendable {
     public let records: [NetMonitorRecord]
     public var frames: [NetMonitorFrame] { records.compactMap(\.frame) }
+    /// Cumulative expected-device datagrams, including undecodable reports.
+    public let received: UInt64
+    /// Cumulative expected-device reports shorter than the known 20-byte prefix.
+    public let undecodable: UInt64
+    /// Cumulative datagrams rejected by the expected-device IPv4 filter.
+    public let foreignSource: UInt64
+    /// Cumulative accepted reports with uninterpreted bytes after the known prefix.
+    public let extended: UInt64
+    /// Cumulative decoded reports; includes extended-prefix reports.
     public let accepted: UInt64
+    /// Cumulative undecodable plus foreign-source datagrams, retained for existing consumers.
     public let rejected: UInt64
     public let lastRejectedLength: Int?
+    /// Most recent expected-device datagram; foreign-source traffic does not update these.
+    public let lastReceivedAt: Date?
+    public let lastReceivedLength: Int?
 }
 
 /// Confined to NetClient. Bind before enabling device reports; never reuse another receiver's port.
@@ -106,14 +121,28 @@ final class NetMonitorReceiver {
     private let sessionID = UUID()
     private var sequence: UInt64 = 0
     let port: UInt16
+    let localAddress: String
     private var accepted: UInt64 = 0
     private var rejected: UInt64 = 0
+    private var received: UInt64 = 0
+    private var undecodable: UInt64 = 0
+    private var foreignSource: UInt64 = 0
+    private var extended: UInt64 = 0
     private var lastRejectedLength: Int?
+    private var lastReceivedAt: Date?
+    private var lastReceivedLength: Int?
 
     init(local: sockaddr_in, host: String, port: UInt16) throws {
         guard (1024...49151).contains(port) else { throw KMError.invalid("监控端口范围为 1024–49151。") }
         self.port = port; self.host = host
         peerAddress = try socketAddress(host, port: 0).sin_addr.s_addr
+        var localIPv4 = local.sin_addr
+        var addressText = [CChar](repeating: 0, count: Int(INET_ADDRSTRLEN))
+        let converted = addressText.withUnsafeMutableBufferPointer {
+            inet_ntop(AF_INET, &localIPv4, $0.baseAddress, socklen_t($0.count)) != nil
+        }
+        guard converted else { throw socketError("格式化监控本机地址") }
+        localAddress = String(cString: addressText)
         let descriptor = socket(AF_INET, SOCK_DGRAM, 0)
         guard descriptor >= 0 else { throw socketError("创建监控套接字") }
         fd = descriptor
@@ -141,15 +170,21 @@ final class NetMonitorReceiver {
                 throw socketError("读取监控报文")
             }
             let receivedAt = Date(), receivedTick = DispatchTime.now().uptimeNanoseconds
-            guard peer.sin_addr.s_addr == peerAddress else { rejected &+= 1; continue }
+            guard peer.sin_addr.s_addr == peerAddress else { rejected &+= 1; foreignSource &+= 1; continue }
+            received &+= 1; lastReceivedAt = receivedAt; lastReceivedLength = count
             sequence += 1
             let record = NetMonitorRecord(data: Data(bytes.prefix(count)), sessionID: sessionID, sequence: sequence,
                                           receivedAt: receivedAt, monotonicNanoseconds: receivedTick,
                                           sourceIPv4: host, sourcePort: UInt16(bigEndian: peer.sin_port), listenPort: port)
             records.append(record)
-            if record.frame != nil { accepted &+= 1 }
-            else { rejected &+= 1; lastRejectedLength = count }
+            if record.frame != nil {
+                accepted &+= 1
+                if count > 20 { extended &+= 1 }
+            } else { rejected &+= 1; undecodable &+= 1; lastRejectedLength = count }
         }
-        return NetMonitorBatch(records: records, accepted: accepted, rejected: rejected, lastRejectedLength: lastRejectedLength)
+        return NetMonitorBatch(records: records, received: received, undecodable: undecodable,
+                               foreignSource: foreignSource, extended: extended, accepted: accepted,
+                               rejected: rejected, lastRejectedLength: lastRejectedLength,
+                               lastReceivedAt: lastReceivedAt, lastReceivedLength: lastReceivedLength)
     }
 }

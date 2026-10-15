@@ -157,7 +157,8 @@
       "url": "https://www.kmbox.top/tools/NetRelease.zip",
       "archive_sha256": "1b6d2a1c8a8e3f2a7a9dccc93f31173229726e0f707f98b953eaf640e0c09273",
       "executable_sha256": "3cc488f67c63909164319fa70133f80a06fac0339f1161c34208f8a9a2ef1a69",
-      "relationship": "static behavior reference; not executed or distributed"
+      "relationship": "static behavior reference; not executed or distributed",
+      "monitor_review": "2026-10-15: static review of first-20-byte receive layout and a single cumulative XY plot; firmware sampling position and three source streams not established"
     },
     {
       "name": "Net host tool 20251106 reference",

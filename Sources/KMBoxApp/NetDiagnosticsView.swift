@@ -21,6 +21,7 @@ struct NetDiagnosticsView: View {
             LazyVStack(spacing: 18) {
                 NetConnectionView()
                 if !model.netError.isEmpty { MessageBanner(text: model.netError, error: true) }
+                monitorPanel
                 MessageBanner(text: model.diagnosticsMessage)
                 HStack {
                     Button(model.pingRunning ? "停止 Ping" : "持续 ICMP Ping") { model.pingRunning ? model.stopPing() : model.startPing() }
@@ -31,7 +32,6 @@ struct NetDiagnosticsView: View {
                 statisticsPanel
                 configurationStatusPanel
                 peripheralPanel
-                monitorPanel
                 HStack(alignment: .top, spacing: 18) { networkPanel; curvePanel }
                 HStack(alignment: .top, spacing: 18) { identityPanel; modePanel }
                 MessageBanner(text: "以下输入框是待写入值。除外设解析参数外，当前协议没有已确认的设置回读接口。Net 与 NB 固件支持可能不同，写入应答不代表实际功能已验证。")
@@ -130,12 +130,26 @@ struct NetDiagnosticsView: View {
                 Spacer()
                 Menu("清空") {
                     Button("设备上报轨迹") { model.deviceTrace = [.zero] }
-                    Button("本程序发送轨迹") { model.sentTrace = [.zero] }
+                    Button("本程序请求终点") { model.sentTrace = [.zero] }
                     Button("全部轨迹") { model.clearTraces() }
                 }
             }
-            Text("\(model.monitorListening ? "本机接收已启动" : "接收未启动") · 有效 \(model.monitorAccepted) · 丢弃 \(model.monitorRejected)\(model.monitorRejectedLength.map { " · 未识别长度 \($0) 字节" } ?? "")")
-                .font(.caption).foregroundStyle(.secondary)
+            Text(monitorStatusText).font(.callout).textSelection(.enabled)
+            if !model.monitorListening && !model.monitorReadError.isEmpty {
+                Text("上次接收错误：" + model.monitorReadError).font(.caption).textSelection(.enabled)
+            }
+            if !model.monitorEndpoint.isEmpty {
+                Text("本机监听 \(model.monitorEndpoint)").font(.system(.caption, design: .monospaced)).textSelection(.enabled)
+            }
+            Text("设备报文 \(model.monitorReceived) · 已解析 \(model.monitorAccepted) · 含附加数据 \(model.monitorExtended) · 过短 \(model.monitorUndecodable) · 其他来源 \(model.monitorForeignSource)")
+                .font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
+            if let date = model.monitorLastReceivedAt, let length = model.monitorLastReceivedLength {
+                HStack(spacing: 4) {
+                    Text("最后收到 \(length) 字节 ·")
+                    Text(date, style: .relative)
+                    Text("前")
+                }.font(.caption).foregroundStyle(.secondary)
+            }
             HStack {
                 Button("导出原始记录…") { model.exportMonitor() }.disabled(model.monitorCapture.records.isEmpty)
                 Text("保留 \(model.monitorCapture.records.count) 条 · 缓冲淘汰 \(model.monitorCapture.discardedRecords) 条")
@@ -149,12 +163,30 @@ struct NetDiagnosticsView: View {
                     .font(.system(.caption, design: .monospaced)).textSelection(.enabled)
             }
             HStack(spacing: 16) {
-                TraceView(title: "设备上报轨迹", points: model.deviceTrace)
-                TraceView(title: "本程序发送轨迹", points: model.sentTrace)
+                TraceView(title: "设备上报轨迹", points: model.deviceTrace, color: accent,
+                          emptyMessage: model.monitorAccepted > 0 ? "已收到报告，尚无鼠标位移" : "收到鼠标位移后绘制")
+                TraceView(title: "本程序请求终点", points: model.sentTrace, color: .orange,
+                          emptyMessage: "本应用的移动指令获应答后绘制")
             }
-            MessageBanner(text: "三路数据尚未全部接通：现有 Net 监控报文只包含一份鼠标报告，不能区分人工、其他程序输入与盒子修正输出。本程序发送轨迹仅连接本应用已获应答的请求终点，不含定时移动的中间点；修正后轨迹没有已确认的网络读取接口，暂不绘制。NB 屏幕的“轨迹照妖镜”可显示三路数据。")
-            Text("显示最近 600 个轨迹点并自动缩放。设备上报格式为 20 字节；未知格式保留原文，不绘制。JSONL 导出包含原始字节与 Mac 接收时间；保留最近 10000 条且原始数据不超过 8 MiB，重新开始监控会清空。未收到上报可能是没有输入、固件不支持，或上报目标被其他程序改写。")
-                .font(.caption).foregroundStyle(.secondary)
+            DisclosureGroup("轨迹数据与排查说明") {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("设备图逐条累加盒子上报的 X/Y 位移，与原 Net 上位机使用同类监控接口。官方将其用于查看最终运动轨迹；当前型号的上报内容以实测为准，不能仅凭报文判断取样在修正前还是修正后。")
+                    Text("另一张图只连接本应用已获应答的移动请求终点，不代表实际中间轨迹。现有监控格式没有人工、软件、修正三路标签，因此不能分色还原 NB 屏幕上的三路轨迹。")
+                    Text("未收到设备报文：先确认本机监听地址是接盒子的网卡、移动接在盒子上的鼠标，并检查系统是否允许本应用使用本地网络。其他上位机可能改写上报目标；接收成功前不将监听启动等同于轨迹可用。")
+                    Text("按上游布局解析前 20 字节，额外字节保留但不解释；不足 20 字节只记录，不绘图。可导出完整原始记录用于核对。保留最近 600 个轨迹点、10000 条报文且原始数据不超过 8 MiB，重新开始监控会清空旧接收记录。")
+                }.font(.caption).foregroundStyle(.secondary).padding(.top, 8)
+            }
+        }
+    }
+
+    private var monitorStatusText: String {
+        switch model.monitorReceptionState {
+        case .idle: return model.monitorNeedsStop ? "本机接收已停止，盒子停止上报尚未确认。" : "监控未运行。点击“开始监控”接收设备上报。"
+        case .waiting: return "正在等待盒子上报；尚未收到目标设备报文。"
+        case .undecodable: return "已收到设备报文，但长度不足 20 字节，暂时无法绘图。请导出原始记录核对。"
+        case .receiving: return "已收到可解析的设备报告。移动接在盒子上的鼠标可查看位移轨迹。"
+        case .stopped: return model.monitorNeedsStop ? "本机接收已停止，盒子停止上报尚未确认；已保留轨迹和记录。" : "监控已停止，已保留轨迹和记录。"
+        case .failed: return "监控接收出错：" + model.monitorReadError + "。请停止监控后重新启动。"
         }
     }
 
@@ -243,11 +275,17 @@ struct NetDiagnosticsView: View {
 private struct TraceView: View {
     let title: String
     let points: [CGPoint]
+    let color: Color
+    let emptyMessage: String
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(title).font(.caption)
+            HStack {
+                Text(title).font(.caption.weight(.medium))
+                Spacer()
+                Text("\(max(0, points.count - 1)) 段").font(.caption).foregroundStyle(.secondary)
+            }
             Canvas { context, size in
-                guard let first = points.first else { return }
+                guard points.count > 1, let first = points.first else { return }
                 let minX = points.map(\.x).min() ?? 0, maxX = points.map(\.x).max() ?? 0
                 let minY = points.map(\.y).min() ?? 0, maxY = points.map(\.y).max() ?? 0
                 let scale = min((size.width - 24) / max(20, maxX - minX), (size.height - 24) / max(20, maxY - minY))
@@ -257,10 +295,15 @@ private struct TraceView: View {
                 }
                 var path = Path(); path.move(to: position(first))
                 for point in points.dropFirst() { path.addLine(to: position(point)) }
-                context.stroke(path, with: .color(accent), lineWidth: 1.5)
+                context.stroke(path, with: .color(color), lineWidth: 1.5)
                 let last = position(points.last ?? first)
-                context.fill(Path(ellipseIn: CGRect(x: last.x - 3, y: last.y - 3, width: 6, height: 6)), with: .color(accent))
+                context.fill(Path(ellipseIn: CGRect(x: last.x - 3, y: last.y - 3, width: 6, height: 6)), with: .color(color))
             }.frame(height: 180).background(.primary.opacity(0.035), in: RoundedRectangle(cornerRadius: 8))
+                .overlay {
+                    if points.count <= 1 { Text(emptyMessage).font(.caption).foregroundStyle(.secondary) }
+                }
+                .accessibilityLabel(title)
+                .accessibilityValue("\(max(0, points.count - 1)) 段位移")
         }.frame(maxWidth: .infinity)
     }
 }

@@ -59,15 +59,31 @@ final class AppModel: ObservableObject {
     @Published var diagnosticsMessage = "先连接设备，再读取外设信息。"
     @Published var monitorListening = false
     @Published var monitorNeedsStop = false
+    @Published var monitorEndpoint = ""
     @Published var monitorFrame: NetMonitorFrame?
     @Published var monitorAccepted: UInt64 = 0
     @Published var monitorRejected: UInt64 = 0
     @Published var monitorRejectedLength: Int?
+    @Published var monitorReceived: UInt64 = 0
+    @Published var monitorUndecodable: UInt64 = 0
+    @Published var monitorForeignSource: UInt64 = 0
+    @Published var monitorExtended: UInt64 = 0
+    @Published var monitorLastReceivedAt: Date?
+    @Published var monitorLastReceivedLength: Int?
+    @Published var monitorReadError = ""
     @Published var monitorCapture = NetMonitorCapture()
     @Published var monitorExportMessage = ""
     @Published var deviceTrace: [CGPoint] = [.zero]
     @Published var sentTrace: [CGPoint] = [.zero]
     private var monitorTask: Task<Void, Never>?
+
+    enum MonitorReceptionState { case idle, waiting, undecodable, receiving, stopped, failed }
+    var monitorReceptionState: MonitorReceptionState {
+        guard monitorListening else { return monitorReceived > 0 || !monitorReadError.isEmpty ? .stopped : .idle }
+        if !monitorReadError.isEmpty { return .failed }
+        if monitorAccepted > 0 { return .receiving }
+        return monitorReceived > 0 ? .undecodable : .waiting
+    }
     private var netTask: Task<Void, Never>?
     private var shuttingDown = false
     let capture = CaptureModel()
@@ -241,6 +257,7 @@ final class AppModel: ObservableObject {
         netStatistics = await net.statistics()
         netConnected = status.connected; netUncertain = status.uncertain
         monitorListening = status.monitorPort != nil; monitorNeedsStop = status.monitorNeedsStop
+        monitorEndpoint = status.monitorLocalAddress.flatMap { address in status.monitorPort.map { "\(address):\($0)" } } ?? ""
         if !status.connected {
             peripheral = nil; peripheralReadAt = nil; adaptation = nil
             peripheralMessage = "未连接，尚未读取。"
@@ -404,6 +421,8 @@ final class AppModel: ObservableObject {
     private func startMonitorPolling() {
         monitorCapture = NetMonitorCapture(); monitorExportMessage = ""
         monitorFrame = nil; monitorAccepted = 0; monitorRejected = 0; monitorRejectedLength = nil
+        monitorReceived = 0; monitorUndecodable = 0; monitorForeignSource = 0; monitorExtended = 0
+        monitorLastReceivedAt = nil; monitorLastReceivedLength = nil; monitorReadError = ""
         deviceTrace = [.zero]
         monitorTask?.cancel()
         monitorTask = Task { [weak self] in
@@ -413,22 +432,39 @@ final class AppModel: ObservableObject {
                 do {
                     let batch = try await self.net.readMonitor()
                     guard !Task.isCancelled else { break }
-                    self.monitorAccepted = batch.accepted; self.monitorRejected = batch.rejected
-                    self.monitorRejectedLength = batch.lastRejectedLength
-                    self.monitorCapture.append(batch.records)
-                    for frame in batch.frames {
-                        self.monitorFrame = frame
-                        self.capture.receiveMouse(frame)
-                        if frame.x != 0 || frame.y != 0 { self.appendTrace(&self.deviceTrace, x: Double(frame.x), y: Double(frame.y)) }
-                    }
+                    self.consumeMonitorBatch(batch)
                 } catch {
                     guard !Task.isCancelled else { break }
                     self.netError = error.localizedDescription
+                    self.monitorReadError = error.localizedDescription
+                    self.capture.monitorStopped()
                     self.log("监控接收：" + error.localizedDescription, error: true)
                     break
                 }
             }
         }
+    }
+    func consumeMonitorBatch(_ batch: NetMonitorBatch) {
+        // An idle poll must not invalidate every page or manufacture a new trace point.
+        if monitorAccepted != batch.accepted { monitorAccepted = batch.accepted }
+        if monitorRejected != batch.rejected { monitorRejected = batch.rejected }
+        if monitorReceived != batch.received { monitorReceived = batch.received }
+        if monitorUndecodable != batch.undecodable { monitorUndecodable = batch.undecodable }
+        if monitorForeignSource != batch.foreignSource { monitorForeignSource = batch.foreignSource }
+        if monitorExtended != batch.extended { monitorExtended = batch.extended }
+        if monitorRejectedLength != batch.lastRejectedLength { monitorRejectedLength = batch.lastRejectedLength }
+        guard !batch.records.isEmpty else { return }
+        monitorLastReceivedAt = batch.lastReceivedAt
+        monitorLastReceivedLength = batch.lastReceivedLength
+        monitorCapture.append(batch.records)
+        var points = deviceTrace
+        for frame in batch.frames {
+            capture.receiveMouse(frame)
+            if frame.x != 0 || frame.y != 0 { appendTrace(&points, x: Double(frame.x), y: Double(frame.y)) }
+        }
+        if let frame = batch.frames.last { monitorFrame = frame }
+        // Publish at most once per batch, even for high-rate device reports.
+        if points != deviceTrace { deviceTrace = points }
     }
     func clearTraces() { deviceTrace = [.zero]; sentTrace = [.zero] }
     private func appendTrace(_ points: inout [CGPoint], x: Double, y: Double) {

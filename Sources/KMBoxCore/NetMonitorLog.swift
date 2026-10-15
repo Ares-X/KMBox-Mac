@@ -10,6 +10,8 @@ public struct NetMonitorRecord: Sendable, Encodable {
     public let sourceIPv4: String
     public let sourcePort: UInt16
     public let listenPort: UInt16
+    public let rawLength: Int
+    /// Complete datagram, including any uninterpreted bytes beyond the decoded prefix.
     public let rawHex: String
     public let frame: NetMonitorFrame?
     public let decodeError: String?
@@ -20,7 +22,7 @@ public struct NetMonitorRecord: Sendable, Encodable {
         receivedAtUnixSeconds = receivedAt.timeIntervalSince1970
         self.monotonicNanoseconds = monotonicNanoseconds
         self.sourceIPv4 = sourceIPv4; self.sourcePort = sourcePort; self.listenPort = listenPort
-        rawHex = data.hexadecimal
+        rawLength = data.count; rawHex = data.hexadecimal
         do { frame = try NetMonitorFrame(data: data); decodeError = nil }
         catch { frame = nil; decodeError = error.localizedDescription }
     }

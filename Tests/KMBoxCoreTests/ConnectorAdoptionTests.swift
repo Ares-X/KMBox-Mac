@@ -100,15 +100,19 @@ final class ConnectorAdoptionTests: XCTestCase {
                          sourceIPv4: "127.0.0.1", sourcePort: 8888, listenPort: 6688)
     }
 
-    func testMonitorSnapshotExportPreservesRawUnknownFormatsAndFractionalTimestamps() throws {
-        var capture = NetMonitorCapture(); capture.append([record(1), record(2, bytes: 4096)])
+    func testMonitorSnapshotExportPreservesExtendedAndShortReportsAndFractionalTimestamps() throws {
+        var capture = NetMonitorCapture(); capture.append([record(1), record(2, bytes: 4096), record(3, bytes: 19)])
         let lines = try capture.jsonLines().split(separator: 10).map { try JSONSerialization.jsonObject(with: Data($0)) as! [String: Any] }
-        XCTAssertEqual(lines.count, 3)
-        XCTAssertEqual(lines[0]["retainedRecords"] as? Int, 2); XCTAssertEqual(lines[0]["discardedRecords"] as? Int, 0)
+        XCTAssertEqual(lines.count, 4)
+        XCTAssertEqual(lines[0]["retainedRecords"] as? Int, 3); XCTAssertEqual(lines[0]["discardedRecords"] as? Int, 0)
         XCTAssertEqual(lines[1]["receivedAtUnixSeconds"] as? Double, 1_000.125)
         XCTAssertEqual(lines[1]["monotonicNanoseconds"] as? UInt64, 123456789)
         XCTAssertEqual(lines[2]["rawHex"] as? String, String(repeating: "07", count: 4096))
-        XCTAssertNil(lines[2]["frame"]); XCTAssertNotNil(lines[2]["decodeError"])
+        XCTAssertEqual(lines[2]["rawLength"] as? Int, 4096)
+        XCTAssertNotNil(lines[2]["frame"]); XCTAssertNil(lines[2]["decodeError"])
+        XCTAssertEqual(lines[3]["rawHex"] as? String, String(repeating: "07", count: 19))
+        XCTAssertEqual(lines[3]["rawLength"] as? Int, 19)
+        XCTAssertNil(lines[3]["frame"]); XCTAssertNotNil(lines[3]["decodeError"])
     }
 
     func testMonitorSnapshotEvictionReportsLossAndRetainsNewestRecords() throws {

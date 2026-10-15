@@ -38,6 +38,21 @@ with tempfile.TemporaryDirectory(prefix='kmbox-cli-') as folder:
         def events():
             return log.read_bytes() if log.exists() else b''
 
+        # Exercise the real kernel EPIPE path in an isolated child. The GUI and CLI
+        # share NetClient; an unusable UDP socket must report failure, not SIGPIPE.
+        fault_library = folder / 'net-send-epipe.dylib'
+        subprocess.run(['xcrun', 'clang', '-dynamiclib', '-o', str(fault_library),
+                        str(package / 'tools/fixtures/net-send-epipe.c')], check=True, capture_output=True, timeout=30)
+        fault_environment = os.environ.copy()
+        fault_environment['DYLD_INSERT_LIBRARIES'] = str(fault_library)
+        before_fault = events()
+        failed_send = subprocess.run(net + ['connect'], env=fault_environment,
+                                     capture_output=True, timeout=10, restore_signals=True)
+        assert failed_send.returncode == 1, (failed_send.returncode, failed_send.stderr)
+        assert b'Broken pipe' in failed_send.stderr, failed_send.stderr
+        assert events() == before_fault, 'A failed send must not reach the device'
+        checks.append('UDP EPIPE reports failure instead of terminating from SIGPIPE')
+
         invalid_serial = [('unknown',), ('cat',), ('ls', '/', 'extra'), ('mv', 'old'),
                           ('run', str(folder / 'missing.py')), ('put', str(folder / 'missing.bin'), '/x'),
                           ('exec', "print('bad')\x03"), ('--baud', '12345', 'ls')]
@@ -95,13 +110,19 @@ with tempfile.TemporaryDirectory(prefix='kmbox-cli-') as folder:
 
         result = json.loads(run(net, 'monitor', '.2', monitor_port()).stdout)
         assert result['accepted'] > 0 and result['latest']['x'] == -3
+        assert result['received'] == result['accepted'] + result['undecodable']
+        assert result['foreignSource'] == 0 and result['extended'] == 0
         export = folder / 'monitor.jsonl'
         result = json.loads(run(net, 'monitor', '.2', monitor_port(), '--monitor-output', str(export), '--stats').stdout)
         rows = [json.loads(line) for line in export.read_bytes().splitlines()]
         assert rows[0]['mode'] == 'live-stream'
         reports = rows[1:]
         assert len(reports) == result['accepted'] + result['rejected'] and len(reports) > 0
+        assert len(reports) == result['received']
+        assert sum('frame' not in row for row in reports) == result['undecodable']
+        assert result['lastReceivedLength'] == reports[-1]['rawLength']
         assert all(row['kind'] == 'datagram' and row['sourceIPv4'] == '127.0.0.1' for row in reports)
+        assert all(row['rawLength'] == len(bytes.fromhex(row['rawHex'])) for row in reports)
         assert all(row['receivedAtUnixSeconds'] > 0 and row['monotonicNanoseconds'] > 0 for row in reports)
         assert [row['sequence'] for row in reports] == list(range(1, len(reports) + 1))
         assert any(row['rawHex'] == '000102' and 'frame' not in row for row in reports)

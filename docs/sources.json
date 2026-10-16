@@ -158,13 +158,33 @@
       "archive_sha256": "1b6d2a1c8a8e3f2a7a9dccc93f31173229726e0f707f98b953eaf640e0c09273",
       "executable_sha256": "3cc488f67c63909164319fa70133f80a06fac0339f1161c34208f8a9a2ef1a69",
       "relationship": "static behavior reference; not executed or distributed",
-      "monitor_review": "2026-10-15: static review of first-20-byte receive layout and a single cumulative XY plot; firmware sampling position and three source streams not established"
+      "monitor_review": "2026-10-16: official archive downloaded again; unchanged executable hash; first-20-byte receive layout, one cumulative XY plot, and no independently labeled three-source rendering; see TRAJECTORY-ANALYSIS.md"
     },
     {
       "name": "Net host tool 20251106 reference",
       "url": "https://www.kmbox.top/wiki_doc/kmboxNet/site/tools/NetRelease.zip",
       "archive_sha256": "f164e71c80cffade314d976f320e0e25465ada6954da4fe53f9f1f47846f1ecc",
       "relationship": "static behavior reference; not executed or distributed"
+    },
+    {
+      "name": "NB firmware 20260903 historical sample",
+      "url": "https://www.kmbox.top/NB_firmware.html",
+      "archive_name": "kmboxNB20260903.cpio",
+      "archive_sha256": "99fb0a292ee45338991026fd383a5dc52514d7bacb942fa0f3dab3c6f5a0c037",
+      "os_payload_sha256": "fb37f4e93ff170ea068f79fa52925b3a144aadb0af60e2c9ca5ac2d79a10eabb",
+      "relationship": "static behavior reference; not executed, flashed or distributed",
+      "trajectory_review": "2026-10-16: tagged internal trace queue and shared XY color rendering; separate 20-byte USB-cache monitor sender and one stored monitor destination; not identification of user device firmware",
+      "analysis_document": "TRAJECTORY-ANALYSIS.md"
+    }
+  ],
+  "architecture_references": [
+    {
+      "repository": "XUANTIE-RV/thead-extension-spec",
+      "revision": "5a75db2696881a812a04e6e00347d3920dae03f2",
+      "source_url": "https://github.com/XUANTIE-RV/thead-extension-spec/tree/5a75db2696881a812a04e6e00347d3920dae03f2",
+      "legacy_opcode_reference": "https://sourceware.org/pipermail/binutils/2022-July/122070.html",
+      "use": "Decode trace-related T-Head opcodes that IDA left unknown",
+      "relationship": "reference-only; no upstream source files shipped"
     }
   ]
 }

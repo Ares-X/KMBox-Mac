@@ -11,7 +11,8 @@
 | [DFRobot/uPyCraft_src](https://github.com/DFRobot/uPyCraft_src/tree/68dfc449ee1af7f4bdb0ba8a9a127ec890935d3b) | `68dfc449ee1af7f4bdb0ba8a9a127ec890935d3b`；完整树未见 LICENSE/COPYING/COPYRIGHT 文件 | Python 编辑、B 串口与板载文件工作流，未分发原 IDE 或代码 |
 | [kvmaibox/kmboxnet](https://github.com/kvmaibox/kmboxnet/tree/9b62283c6271e8e594f3b97986fed291deb4318f) | `9b62283c6271e8e594f3b97986fed291deb4318f`；完整树未见许可证文件 | `NetProtocol`、`NetClient`、`NetDiagnostics` 的报文布局与字节序 |
 | [MicroPython pyboard.py](https://github.com/micropython/micropython/blob/v1.13/tools/pyboard.py) / [MIT 许可](https://github.com/micropython/micropython/blob/v1.13/LICENSE) | `v1.13`；Copyright 2013–2020 Damien P. George | raw REPL framing、Ctrl-C/终端行为对照；未包含 MicroPython 运行时或 pyboard 工具 |
-| [官方 Net 调试工具](https://www.kmbox.top/tools/NetRelease.zip) | 20260904，另对照旧版 20251106；下载指纹见来源清单 | 原 Net 曲线菜单、外设解析、监控格式、芯片 ID 和在线适配行为的静态核对；2026-10-15 复核单路 XY 累计及前 20 字节读取；未执行或分发 EXE |
+| [官方 Net 调试工具](https://www.kmbox.top/tools/NetRelease.zip) | 20260904，另对照旧版 20251106；下载指纹见来源清单 | 原 Net 曲线菜单、外设解析、监控格式、芯片 ID 和在线适配行为的静态核对；2026-10-16 重新下载并确认单路 XY 累计及前 20 字节读取；未执行或分发 EXE |
+| [NB 固件](https://www.kmbox.top/NB_firmware.html) / [轨迹说明](https://www.kmbox.top/wiki_doc/kmboxNB/site/022-Trace/) | 20260903 历史固件；2026-10-16 静态核对，指纹见[轨迹分析](docs/TRAJECTORY-ANALYSIS.md) | 三来源内部轨迹队列、颜色映射与网络监控分离；未刷写、未分发固件，不代表用户当前固件 |
 | [Net 用户手册](https://www.kmbox.top/wiki_doc/kmboxNet/site/) | 2026-10-15 核对“如何打开轨迹显示功能” | 官方最终运动轨迹及第三方软件输入语义；不据此断言 NB 三路分离已实现 |
 | [KMBox 文档入口](https://www.kmbox.top/documents.html) / [NB 文档](https://www.kmbox.top/wiki_doc/kmboxNB/site/) | 文档按 2026-09-13 的研究记录使用，官网可能更新 | 型号分流、NB 接线/Python、设备主动 HTTP 更新、三路轨迹边界 |
 
